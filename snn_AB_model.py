@@ -1,8 +1,7 @@
 # %%
 import torch
 import matplotlib.pyplot as plt
-#import snn_module as ctp
-import centipede as ctp
+import snn_module as ctp
 import matplotlib.cm as clmps
 
 dtype = torch.float64
