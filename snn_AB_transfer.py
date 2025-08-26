@@ -1,8 +1,7 @@
 # %%
 import torch
 import matplotlib.pyplot as plt
-# snn_module
-import centipede as ctp
+import snn_module as ctp
 import matplotlib.cm as clmps
 dtype = torch.float64
 device = torch.device("cpu")
