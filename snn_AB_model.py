@@ -157,7 +157,7 @@ while j < (reps):
                 loss_firing = torch.abs(50.0 - out2_a_i_flicker) / 50.0
 
                 # loss pearson between [0, 1]
-                loss_pearson = (1.0 - ctp.i_am_a_weird_pearson(out2_b_i_flicker, i_flicker, out1_b, inp)) / 2
+                loss_pearson = (1.0 - ctp.one_step_pearson(out2_b_i_flicker, i_flicker, out1_b, inp)) / 2
 
                 loss = loss_firing + loss_pearson
 
