@@ -10,7 +10,7 @@ The project investigates how spiking neural networks (SNNs), composed of leaky i
 Two core network architectures are implemented:
 
 AB model: a minimal sender–receiver setup, where recurrent coupling in the sender shapes coincidence detection in the receiver.
-ct-AB model: an extended architecture with a control population that modulates the sender, enabling attention-dependent selective routing.
+aAB model: an extended architecture with a control population (a) that modulates the sender, enabling attention-dependent selective routing.
 
 Both models are studied with:
 
