@@ -253,7 +253,7 @@ while j < (reps):
                 # loss firing rate
                 loss_firing = (torch.abs(50.0 - out2_a_i_flicker) / 50.0)
                 
-                wp_cf_b = ctp.i_am_a_weird_pearson(out2_b_i_flicker, i_flicker, out1_b, inp)
+                wp_cf_b = ctp.one_step_pearson(out2_b_i_flicker, i_flicker, out1_b, inp)
                 # loss pearson between [0, 1]
                 loss_pearson = ((1.0 -wp_cf_b) / 2)*att + torch.abs(wp_cf_b)*(1.0 - att)
 
@@ -284,3 +284,153 @@ while j < (reps):
             w.grad[pop_b.unsqueeze(-1) * pop_a] = 0.0  # A -> B
 
             optimizer.step()
+            
+lossies_av = lossies.mean(dim=0) #torch.zeros((reps, 3, nb_epochs, nb_flicker), device=device, dtype=dtype)
+frs_av = frs.mean(dim=0) #torch.zeros((reps, 2, nb_epochs), device=device, dtype=dtype)
+cfs_av = cfs.mean(dim=0) #torch.zeros((reps, 2, nb_epochs), device=device, dtype=dtype)
+w_params_av = w_params.mean(dim=0) #torch.zeros((reps, 6, nb_epochs), device=device, dtype=dtype)
+w2_params_av = w2_params.mean(dim=0)
+lossies_std = lossies.std(dim=0) #torch.zeros((reps, 3, nb_epochs, nb_flicker), device=device, dtype=dtype)
+frs_std = frs.std(dim=0) #torch.zeros((reps, 2, nb_epochs), device=device, dtype=dtype)
+cfs_std = cfs.std(dim=0) #torch.zeros((reps, 2, nb_epochs), device=device, dtype=dtype)
+w_params_std = w_params.std(dim=0) #torch.zeros((reps, 6, nb_epochs), device=device, dtype=dtype)
+w2_params_std = w2_params.std(dim=0) 
+is_savefig = False #False #True
+x_ax = torch.arange(nb_epochs)
+
+# %%
+colors_wp = clmps.Accent(torch.linspace(0.0, 1.0, 8))
+plt.figure(figsize=(9, 4))
+x_axis = torch.arange(0, nb_epochs, 2)
+cfs_a = cfs_av[0, :][x_ax % 2 == 1]
+even_cfs_a = cfs_av[0, :][x_ax % 2 == 0]
+cfs_a_std = cfs_std[0, :][x_ax % 2 == 1]
+even_cfs_a_std = cfs_std[0, :][x_ax % 2 == 0]
+odd_cfs = cfs_av[1, :][x_ax % 2 == 1]
+even_cfs = cfs_av[1, :][x_ax % 2 == 0]
+odd_std = cfs_std[1, :][x_ax% 2 == 1]
+even_std = cfs_std[1, :][x_ax % 2 == 0]
+plt.plot(x_axis, cfs_a, color=colors_wp[0], label=r'$\rho_{A}att$')
+plt.fill_between(x_axis,
+                cfs_a - cfs_a_std,
+                cfs_a + cfs_a_std,
+                color=colors_wp[0], alpha=0.1)
+plt.plot(x_axis, even_cfs_a, '--', color=colors_wp[0], label=r'$\rho_{A}nat$')
+plt.fill_between(x_axis,
+                even_cfs_a - even_cfs_a_std,
+                even_cfs_a + even_cfs_a_std,
+                color=colors_wp[0], alpha=0.1)
+plt.plot(x_axis, odd_cfs, color=colors_wp[5], label=r'$\rho_{B}att$')
+plt.fill_between(x_axis,
+                odd_cfs - odd_std ,
+                odd_cfs + odd_std ,
+                color=colors_wp[5], alpha=0.1)
+plt.plot(x_axis, even_cfs, color=colors_wp[4], label=r'$\rho_{B}nat$')
+plt.fill_between(x_axis,
+                even_cfs - even_std ,
+                even_cfs + even_std ,
+                color=colors_wp[4], alpha=0.1)
+plt.ylabel(r'Correlation $\rho$')
+plt.xlabel('epoch')
+plt.legend(loc='center left')
+plt.grid()
+if is_savefig:
+    plt.savefig(sim_name+str(sim_num)+'cfs2')
+
+# %%
+plt.figure(figsize=(9, 4))
+efficacy = odd_cfs / cfs_a
+efficacy_std = odd_std / cfs_a_std
+ratio = odd_cfs / even_cfs 
+ratio_std = odd_std / even_std 
+
+plt.plot(x_axis, efficacy, label='efficacy', color=colors_wp[1])
+plt.fill_between(x_axis,
+                efficacy - efficacy_std,
+                efficacy + efficacy_std,
+                color=colors_wp[1], alpha=0.3)
+plt.plot(x_axis, ratio, label='ratio', color=colors_wp[2])
+plt.fill_between(x_axis,
+                ratio - ratio_std,
+                ratio + ratio_std,
+                color=colors_wp[2], alpha=0.3)
+plt.legend()
+plt.grid()
+if is_savefig:
+    plt.savefig(sim_name+str(sim_num)+'cfs3')
+
+# %%
+plt.figure(figsize=(9, 4))
+odd_fr_a = frs_av[0, :][x_ax % 2 == 1]
+even_fr_a = frs_av[0, :][x_ax % 2 == 0]
+odd_fr_b = frs_av[1, :][x_ax % 2 == 1]
+even_fr_b = frs_av[1, :][x_ax % 2 == 0]
+odd_fr_a_std = frs_std[0, :][x_ax % 2 == 1]
+even_fr_a_std = frs_std[0, :][x_ax % 2 == 0]
+odd_fr_b_std = frs_std[1, :][x_ax % 2 == 1]
+even_fr_b_std = frs_std[1, :][x_ax % 2 == 0]
+plt.plot(x_axis, odd_fr_a, color=colors_wp[5], label=r'$r_{A}nat$')
+plt.fill_between(x_axis,
+                odd_fr_a - odd_fr_a_std,
+                odd_fr_a + odd_fr_a_std,
+                color=colors_wp[5], alpha=0.1)
+plt.plot(x_axis, even_fr_a, color=colors_wp[4], label=r'$r_{A}nat$')
+plt.fill_between(x_axis,
+                even_fr_a - even_fr_a_std  ,
+                even_fr_a + even_fr_a_std ,
+                color=colors_wp[4], alpha=0.1)
+plt.plot(x_axis, odd_fr_b, '--', color=colors_wp[5], label=r'$r_{B}att$')
+plt.fill_between(x_axis,
+                odd_fr_b - odd_fr_b_std,
+                odd_fr_b + odd_fr_b_std,
+                color=colors_wp[5], alpha=0.1)
+plt.plot(x_axis, even_fr_b, '--', color=colors_wp[4], label=r'$r_{B}nat$')
+plt.fill_between(x_axis,
+                even_fr_b - even_fr_b_std,
+                even_fr_b + even_fr_b_std,
+                color=colors_wp[4], alpha=0.1)
+plt.ylabel(r'Firing rate $r$ [Hz]')
+plt.yscale('log')
+plt.xlabel('epoch')
+plt.legend()
+plt.grid()
+if is_savefig:
+    plt.savefig(sim_name+str(sim_num)+'frs2')
+# %%
+fig, axs = plt.subplots(3, 2, figsize=(12, 9), sharex=True)
+
+# === Plotting Function ===
+def plot_weight(ax, x, mean, std, color, label_prefix):
+    ax.plot(x, mean, color=color, label=rf'$\mu_{{{label_prefix}}}$', linewidth=2)
+    ax.fill_between(x, mean - std, mean + std, color=color, alpha=0.1)
+    ax.plot(x, std, '--', color=color, label=rf'$SD_{{{label_prefix}}}$', linewidth=1.5)
+    ax.fill_between(x, std - std * 0.1, std + std * 0.1, color=color, alpha=0.05)  # optional SD shading
+    ax.set_ylabel('Coupling strength')
+    ax.grid(True)
+    ax.legend(loc='upper right')
+
+# === Row 0: "aa" Weights ===
+plot_weight(axs[0, 0], x_ax, w_params_av[0, :], w_params_std[0, :], colors_wp[-2], 'A,A')
+axs[0, 0].set_title('Raw Weights (w) — A,A')
+plot_weight(axs[0, 1], x_ax, w2_params_av[0, :], w2_params_std[0, :], colors_wp[-1], 'A,A')
+axs[0, 1].set_title('Mapped Weights (w2) — A,A')
+
+# === Row 1: "cta" Weights ===
+plot_weight(axs[1, 0], x_ax, w_params_av[2, :], w_params_std[2, :], colors_wp[-2], 'A,CT')
+axs[1, 0].set_title('Raw Weights (w) — A,CT')
+plot_weight(axs[1, 1], x_ax, w2_params_av[2, :], w2_params_std[2, :], colors_wp[-1], 'A,CT')
+axs[1, 1].set_title('Mapped Weights (w2) — A,CT')
+
+# === Row 2: "ct" Weights ===
+plot_weight(axs[2, 0], x_ax, w_params_av[4, :], w_params_std[4, :], colors_wp[-2], 'CT,CT')
+axs[2, 0].set_title('Raw Weights (w) — CT,CT')
+plot_weight(axs[2, 1], x_ax, w2_params_av[4, :], w2_params_std[4, :], colors_wp[-1], 'CT,CT')
+axs[2, 1].set_title('Mapped Weights (w2) — CT,CT')
+
+# === Labels & Layout ===
+for ax in axs[2, :]:
+    ax.set_xlabel('Epoch')
+
+plt.suptitle("Evolution of Raw Weights (w) and Mapped Weights (w2) Across Training", fontsize=14)
+plt.tight_layout(rect=[0, 0, 1, 0.97])
+plt.show()
